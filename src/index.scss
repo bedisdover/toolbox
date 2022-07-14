@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 微软雅黑, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 16px;
+}
+
+.label,
+label {
+  @apply h-9 leading-9 text-right;
+}
+
+input, textarea {
+  @apply px-3 py-2 border shadow-sm border-slate-300 focus:outline-none focus:border-sky-500 focus:ring-sky-500 rounded-md focus:ring-1;
+
+  &.error {
+    @apply border-pink-500 text-pink-600 focus:border-pink-500 focus:ring-pink-500;
+  }
+}
+
+button {
+  height: 40px;
+  line-height: 40px;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  border-radius: 0.5rem;
+  border: 0;
+
+  &.error {
+    animation: shake 0.5s;
+  }
+
+  &:hover {
+    @apply shadow-md;
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-10px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(10px);
+  }
+}
