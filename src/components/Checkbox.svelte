@@ -20,7 +20,7 @@
 }
 
 input:checked + .slider {
-  background-color: #44cc66;
+  background-color: #1c69cd;
 }
 
 input:checked + .slider .knob {
