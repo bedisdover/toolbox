@@ -1,7 +1,7 @@
 <script lang="ts">
 import fs from 'fs'
 import path from 'path'
-import { shell } from 'electron'
+import { ipcRenderer, shell } from 'electron'
 import { scale } from 'svelte/transition'
 import Icon from './components/Icon.svelte'
 import Checkbox from './components/Checkbox.svelte'
@@ -12,7 +12,8 @@ let dirs: string[] = []
 let names = ''
 const options = {
   matchWords: false,
-  ignoreCase: false,
+  ignoreCase: true,
+  ignorePostfix: true,
 }
 let target = ''
 let error = false
@@ -33,6 +34,18 @@ function addDirs(list: string[] | FileList) {
   dirs = dirs.concat(filtered)
 }
 
+async function ocr(list: string[]) {
+  ipcRenderer.send('ocr', { file: list[0] })
+}
+ipcRenderer.on('ocr-res', (_, message) => {
+  const { error, data } = message
+  if (error) {
+    Toast.error(error)
+    return
+  }
+  names = data.split('\n').filter(Boolean).join('\n')
+})
+
 function submit() {
   error = !names
   if (error) {
@@ -42,9 +55,16 @@ function submit() {
   }
 
   try {
-    fs.mkdirSync(target, { recursive: true })
+    if (!fs.existsSync(target)) {
+      fs.mkdirSync(target, { recursive: true })
+    }
 
     const files = names.trim().replaceAll(/\s+/g, '|')
+    if (options.ignorePostfix) {
+      for (let file of files) {
+        file = file.replace(/\..*$/g, '')
+      }
+    }
     const reg = new RegExp(options.matchWords ? `^${files}$` : files, options.ignoreCase ? 'i' : '')
 
     for (const dir of dirs) {
@@ -64,7 +84,7 @@ function submit() {
 }
 </script>
 
-<div class="h-100 overflow-auto grid gap-x-8 gap-y-3" style="grid-template-columns: max-content 1fr">
+<div class="h-100 overflow-auto grid gap-x-8 gap-y-3" style="grid-template-columns: max-content minmax(0, 1fr)">
   <div class="label">文件夹</div>
   <div
     class="p-6 flex flex-col justify-center items-center border-2 border-gray-700 border-dashed rounded"
@@ -72,7 +92,11 @@ function submit() {
     on:drop|preventDefault|stopPropagation="{(e) => {
       addDirs(e.dataTransfer.files)
     }}">
-    <FileOpener multiple onOpen="{addDirs}" />
+    <FileOpener multiple onOpen="{addDirs}">
+      <button class="inline-flex items-center bg-slate-500">
+        选择文件夹
+      </button>
+    </FileOpener>
     <div class="mt-1.5 text-sm text-gray-400 italic">或将文件夹拖放到此处</div>
 
     <div class="flex flex-wrap justify-center space-x-2">
@@ -97,13 +121,19 @@ function submit() {
   </div>
 
   <label for="names">文件名</label>
-  <textarea
-    id="names"
-    rows="8"
-    class:error="{error}"
-    placeholder="输入文件名，多个用空格或换行分隔"
-    bind:value="{names}"
-    on:input="{() => (error = false)}"></textarea>
+  <div>
+    <textarea
+      id="names"
+      rows="8"
+      class="w-full"
+      class:error="{error}"
+      placeholder="输入文件名，多个用空格或换行分隔"
+      bind:value="{names}"
+      on:input="{() => (error = false)}"></textarea>
+    <FileOpener type="file" onOpen="{ocr}">
+      <Icon name="ocr" class="text-xl hover:text-sky-500" />
+    </FileOpener>
+  </div>
 
   <div class="col-start-2 flex space-x-4">
     <div class="label">选项</div>
@@ -120,15 +150,23 @@ function submit() {
         onChange="{(checked) => {
           options.ignoreCase = checked
         }}" />
+      <Checkbox
+        label="忽略后缀"
+        checked="{options.ignorePostfix}"
+        onChange="{(checked) => {
+          options.ignorePostfix = checked
+        }}" />
     </div>
   </div>
 
-  <div class="col-start-2 flex space-x-4">
-    <div class="label">目标位置</div>
-    <div class="flex items-center">
-      <FileOpener onOpen="{(dir) => (target = dir)}" />
-      <span class="ml-2">{target}</span>
-    </div>
+  <div class="col-start-2 flex space-x-4 items-center">
+    <div class="label min-w-max">目标位置</div>
+    <FileOpener
+      onOpen="{(dir) => {
+        if (!dir?.[0]) return
+        target = `${dir[0]}/${dirs[0] ? dirs[0].split('/').slice(-1)[0] : Date.now()}_copy`
+      }}" />
+    <div class="ml-2 truncate">{target}</div>
   </div>
 
   <button

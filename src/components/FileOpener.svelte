@@ -11,11 +11,11 @@ export let multiple = false
 export let onOpen: (files: string[]) => void
 </script>
 
-<button
-  class="inline-flex items-center bg-slate-500"
+<div
+  class="cursor-pointer"
   on:click="{() => {
-    openCallback = onOpen
-    ipcRenderer.send('open-file', { type, multiple })
-  }}">
-  选择文件夹
-</button>
+  openCallback = onOpen
+  ipcRenderer.send('open-file', { type, multiple })
+}}">
+  <slot />
+</div>

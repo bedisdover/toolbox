@@ -28,7 +28,7 @@ input:checked + .slider .knob {
 }
 </style>
 
-<script>
+<script lang="ts">
 export let label
 export let checked = true
 export let onChange

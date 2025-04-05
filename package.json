@@ -34,6 +34,7 @@
           "name": "@electron-forge/plugin-webpack",
           "config": {
             "mainConfig": "./webpack.main.config.js",
+            "devContentSecurityPolicy": "connect-src 'self' 'unsafe-eval' data: blob: ",
             "renderer": {
               "config": "./webpack.renderer.config.js",
               "nodeIntegration": true,
@@ -81,8 +82,8 @@
     "postcss-scss": "^4.0.4",
     "prettier": "^2.7.1",
     "prettier-plugin-svelte": "^2.7.0",
-    "sass": "^1.53.0",
-    "sass-loader": "^13.0.2",
+    "sass": "^1.85.1",
+    "sass-loader": "^16.0.5",
     "style-loader": "^3.0.0",
     "svelte": "^3.48.0",
     "svelte-check": "^2.8.0",
